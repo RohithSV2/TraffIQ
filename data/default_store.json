@@ -1,0 +1,234 @@
+{
+  "roads": [
+    {
+      "id": 1,
+      "road_code": "RD-01",
+      "name": "Express Ring Highway (Northeast)",
+      "road_type": "Highway",
+      "length_km": 18.5,
+      "speed_limit": 90,
+      "capacity_vph": 3000,
+      "current_volume": 2450,
+      "current_avg_speed": 42.0,
+      "current_congestion": "Moderate",
+      "start_lat": 12.9716,
+      "start_lng": 77.5946,
+      "end_lat": 13.0425,
+      "end_lng": 77.635,
+      "coordinates": [
+        [12.9716, 77.5946],
+        [12.995, 77.61],
+        [13.021, 77.625],
+        [13.0425, 77.635]
+      ]
+    },
+    {
+      "id": 2,
+      "road_code": "RD-02",
+      "name": "Central Tech Corridor Arterial",
+      "road_type": "Arterial",
+      "length_km": 12.2,
+      "speed_limit": 60,
+      "capacity_vph": 1800,
+      "current_volume": 1680,
+      "current_avg_speed": 21.0,
+      "current_congestion": "High",
+      "start_lat": 12.9352,
+      "start_lng": 77.6245,
+      "end_lat": 12.985,
+      "end_lng": 77.645,
+      "coordinates": [
+        [12.9352, 77.6245],
+        [12.955, 77.635],
+        [12.972, 77.64],
+        [12.985, 77.645]
+      ]
+    },
+    {
+      "id": 3,
+      "road_code": "RD-03",
+      "name": "Metro Green Line Bypass",
+      "road_type": "Arterial",
+      "length_km": 14.8,
+      "speed_limit": 60,
+      "capacity_vph": 1800,
+      "current_volume": 790,
+      "current_avg_speed": 52.0,
+      "current_congestion": "Low",
+      "start_lat": 12.922,
+      "start_lng": 77.585,
+      "end_lat": 12.981,
+      "end_lng": 77.598,
+      "coordinates": [
+        [12.922, 77.585],
+        [12.943, 77.589],
+        [12.965, 77.592],
+        [12.981, 77.598]
+      ]
+    },
+    {
+      "id": 4,
+      "road_code": "RD-04",
+      "name": "Airport Express Elevated Corridor",
+      "road_type": "Highway",
+      "length_km": 26.0,
+      "speed_limit": 90,
+      "capacity_vph": 3200,
+      "current_volume": 1400,
+      "current_avg_speed": 78.0,
+      "current_congestion": "Low",
+      "start_lat": 13.02,
+      "start_lng": 77.6,
+      "end_lat": 13.1986,
+      "end_lng": 77.7066,
+      "coordinates": [
+        [13.02, 77.6],
+        [13.08, 77.63],
+        [13.14, 77.67],
+        [13.1986, 77.7066]
+      ]
+    },
+    {
+      "id": 5,
+      "road_code": "RD-05",
+      "name": "Downtown Old City Heritage Way",
+      "road_type": "Urban",
+      "length_km": 7.5,
+      "speed_limit": 45,
+      "capacity_vph": 1200,
+      "current_volume": 1150,
+      "current_avg_speed": 16.5,
+      "current_congestion": "High",
+      "start_lat": 12.965,
+      "start_lng": 77.575,
+      "end_lat": 12.99,
+      "end_lng": 77.582,
+      "coordinates": [
+        [12.965, 77.575],
+        [12.975, 77.578],
+        [12.99, 77.582]
+      ]
+    },
+    {
+      "id": 6,
+      "road_code": "RD-06",
+      "name": "South Ring Suburban Link",
+      "road_type": "Residential",
+      "length_km": 9.4,
+      "speed_limit": 35,
+      "capacity_vph": 700,
+      "current_volume": 320,
+      "current_avg_speed": 31.0,
+      "current_congestion": "Low",
+      "start_lat": 12.905,
+      "start_lng": 77.602,
+      "end_lat": 12.93,
+      "end_lng": 77.638,
+      "coordinates": [
+        [12.905, 77.602],
+        [12.918, 77.62],
+        [12.93, 77.638]
+      ]
+    }
+  ],
+  "incidents": [
+    {
+      "id": 1,
+      "title": "Two-car fender bender near Exit 4",
+      "incident_type": "Accident",
+      "severity": "Medium",
+      "road_name": "Central Tech Corridor Arterial",
+      "latitude": 12.955,
+      "longitude": 77.635,
+      "description": "Minor collision blocking the right lane. Recovery vehicle on site.",
+      "reporter_name": "Rohith (Commuter)",
+      "status": "Verified",
+      "upvotes": 16,
+      "created_at": "2026-10-16T18:15:00.000Z"
+    },
+    {
+      "id": 2,
+      "title": "Flyover Expansion Joint Repair",
+      "incident_type": "Roadwork",
+      "severity": "High",
+      "road_name": "Express Ring Highway (Northeast)",
+      "latitude": 13.021,
+      "longitude": 77.625,
+      "description": "Roadwork underway. Lane narrowed from 3 lanes to 1 lane.",
+      "reporter_name": "Traffic Control Room",
+      "status": "Verified",
+      "upvotes": 34,
+      "created_at": "2026-10-16T17:40:00.000Z"
+    },
+    {
+      "id": 3,
+      "title": "Waterlogging beneath Underpass",
+      "incident_type": "Waterlogging",
+      "severity": "Medium",
+      "road_name": "Downtown Old City Heritage Way",
+      "latitude": 12.975,
+      "longitude": 77.578,
+      "description": "Heavy rain accumulation causing vehicle slow down. Low ground vehicles avoid.",
+      "reporter_name": "City Patrol",
+      "status": "Reported",
+      "upvotes": 9,
+      "created_at": "2026-10-16T18:00:00.000Z"
+    }
+  ],
+  "alerts": [
+    {
+      "id": 1,
+      "title": "Priority Corridor Activated",
+      "message": "Emergency corridor active on Central Tech Corridor towards Apollo Memorial Hospital. Motorists requested to clear the right lane.",
+      "alert_type": "Emergency",
+      "priority": "Urgent",
+      "active": true,
+      "created_at": "2026-10-16T18:20:00.000Z"
+    },
+    {
+      "id": 2,
+      "title": "Monsoon Downpour Warning",
+      "message": "Scattered heavy showers reported across North sectors. Reduce vehicle speed by 20% to avoid hydroplaning.",
+      "alert_type": "Weather",
+      "priority": "High",
+      "active": true,
+      "created_at": "2026-10-16T17:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "title": "Weekend Maintenance Notice",
+      "message": "Elevated highway maintenance scheduled between 23:00 and 05:00 on Sunday.",
+      "alert_type": "Road Closure",
+      "priority": "Normal",
+      "active": true,
+      "created_at": "2026-10-16T16:00:00.000Z"
+    }
+  ],
+  "emergency_vehicles": [
+    {
+      "id": 1,
+      "vehicle_code": "AMB-108",
+      "vehicle_type": "Ambulance",
+      "current_route": "Central Tech Corridor Arterial",
+      "latitude": 12.962,
+      "longitude": 77.638,
+      "speed_kmh": 62.0,
+      "destination": "General Multi-Speciality Hospital",
+      "active": true,
+      "updated_at": "2026-10-16T18:25:00.000Z"
+    },
+    {
+      "id": 2,
+      "vehicle_code": "FIRE-04",
+      "vehicle_type": "Fire Truck",
+      "current_route": "Express Ring Highway (Northeast)",
+      "latitude": 13.01,
+      "longitude": 77.62,
+      "speed_kmh": 58.0,
+      "destination": "Sector 7 Industrial Complex",
+      "active": true,
+      "updated_at": "2026-10-16T18:22:00.000Z"
+    }
+  ],
+  "predictions_history": []
+}

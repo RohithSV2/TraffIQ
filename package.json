@@ -1,0 +1,31 @@
+{
+  "name": "traffiq",
+  "version": "1.0.0",
+  "description": "TraffIQ: AI-Powered Traffic Prediction and Smart Route Recommendation System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "ml:dataset": "python ml/generate_dataset.py",
+    "ml:train": "python ml/train_model.py",
+    "ml:predict": "python ml/predict.py"
+  },
+  "keywords": [
+    "traffic-prediction",
+    "machine-learning",
+    "random-forest",
+    "smart-routes",
+    "intelligent-transportation-systems",
+    "express",
+    "nodejs",
+    "mysql"
+  ],
+  "author": "RohithSV2",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mysql2": "^3.9.7"
+  }
+}

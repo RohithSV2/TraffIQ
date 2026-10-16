@@ -1,0 +1,117 @@
+{
+  "feature_names": [
+    "time_of_day",
+    "day_of_week",
+    "is_weekend",
+    "road_capacity",
+    "traffic_volume",
+    "avg_speed",
+    "incident_reported",
+    "emergency_vehicle_active",
+    "volume_capacity_ratio",
+    "road_type_Arterial",
+    "road_type_Highway",
+    "road_type_Residential",
+    "road_type_Urban",
+    "weather_Clear",
+    "weather_Cloudy",
+    "weather_Foggy",
+    "weather_Heavy Rain",
+    "weather_Rainy"
+  ],
+  "classes": [
+    "Low",
+    "Moderate",
+    "High"
+  ],
+  "capacities": {
+    "Highway": 3000,
+    "Arterial": 1800,
+    "Urban": 1200,
+    "Residential": 600
+  },
+  "speed_limits": {
+    "Highway": 90,
+    "Arterial": 60,
+    "Urban": 45,
+    "Residential": 30
+  },
+  "feature_importances": [
+    {
+      "feature": "volume_capacity_ratio",
+      "importance": 0.281
+    },
+    {
+      "feature": "avg_speed",
+      "importance": 0.2671
+    },
+    {
+      "feature": "traffic_volume",
+      "importance": 0.1404
+    },
+    {
+      "feature": "incident_reported",
+      "importance": 0.1168
+    },
+    {
+      "feature": "time_of_day",
+      "importance": 0.0533
+    },
+    {
+      "feature": "road_capacity",
+      "importance": 0.0267
+    },
+    {
+      "feature": "weather_Heavy Rain",
+      "importance": 0.0248
+    },
+    {
+      "feature": "road_type_Highway",
+      "importance": 0.0141
+    },
+    {
+      "feature": "weather_Clear",
+      "importance": 0.0127
+    },
+    {
+      "feature": "weather_Rainy",
+      "importance": 0.0121
+    },
+    {
+      "feature": "day_of_week",
+      "importance": 0.0105
+    },
+    {
+      "feature": "road_type_Arterial",
+      "importance": 0.0088
+    },
+    {
+      "feature": "weather_Cloudy",
+      "importance": 0.008
+    },
+    {
+      "feature": "road_type_Residential",
+      "importance": 0.0066
+    },
+    {
+      "feature": "is_weekend",
+      "importance": 0.0061
+    },
+    {
+      "feature": "road_type_Urban",
+      "importance": 0.006
+    },
+    {
+      "feature": "weather_Foggy",
+      "importance": 0.0039
+    },
+    {
+      "feature": "emergency_vehicle_active",
+      "importance": 0.0009
+    }
+  ],
+  "metrics": {
+    "accuracy": 96.3,
+    "macro_f1": 95.6
+  }
+}

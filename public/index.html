@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TraffIQ - AI-Powered Traffic Prediction & Smart Route Recommendation</title>
+  <meta name="description" content="TraffIQ: An intelligent transportation assistance system combining Scikit-learn Random Forest ML models with real-time route recommendation, community incident reporting, and emergency vehicle awareness.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20width=%22100%22%20height=%22100%22><text y=%22.9em%22 font-size=%2290%22>🚦</text></svg>">
+
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Emergency Vehicle Alert Banner (Shown dynamically when active vehicle in vicinity) -->
+  <div id="emergency-banner" class="emergency-banner hidden">
+    <div class="emergency-banner-content">
+      <div class="emergency-pulse-indicator">
+        <span class="pulse-ring"></span>
+        <i class="fa-solid fa-truck-medical"></i>
+      </div>
+      <div class="emergency-banner-text">
+        <h4 id="emergency-banner-title">PRIORITY EMERGENCY CORRIDOR ACTIVE</h4>
+        <p id="emergency-banner-desc">Ambulance AMB-108 active on Central Tech Corridor Arterial. Please clear right lane immediately.</p>
+      </div>
+      <div class="emergency-banner-actions">
+        <button id="btn-sound-toggle" class="btn-sm btn-icon" title="Toggle Siren Sound">
+          <i class="fa-solid fa-volume-high"></i>
+        </button>
+        <button id="btn-emergency-dismiss" class="btn-sm btn-icon" title="Dismiss Alert">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header / Navigation Bar -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-logo">
+          <div class="logo-circle">
+            <span class="traffic-dot dot-red"></span>
+            <span class="traffic-dot dot-yellow"></span>
+            <span class="traffic-dot dot-green"></span>
+          </div>
+          <i class="fa-solid fa-route brand-icon"></i>
+        </div>
+        <div class="brand-text">
+          <div class="brand-title">Traff<span>IQ</span></div>
+          <div class="brand-tagline">Predict. Navigate. Arrive Smarter.</div>
+        </div>
+      </div>
+
+      <!-- Live Telemetry / Weather Widget -->
+      <div class="header-telemetry">
+        <div class="telemetry-badge" id="weather-badge">
+          <i class="fa-solid fa-cloud-sun text-amber"></i>
+          <span id="weather-text">Partly Cloudy • 27°C</span>
+        </div>
+        <div class="telemetry-badge" id="clock-badge">
+          <i class="fa-regular fa-clock text-blue"></i>
+          <span id="live-clock">18:45:00 IST</span>
+        </div>
+        <div class="telemetry-badge" id="system-status-badge">
+          <span class="status-indicator-dot"></span>
+          <span id="system-status-text">ML Model Active (96.3%)</span>
+        </div>
+        <button id="theme-toggle" class="btn-icon theme-btn" title="Toggle Light/Dark Theme">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="main-nav">
+      <div class="nav-container">
+        <button class="nav-tab active" data-tab="tab-map">
+          <i class="fa-solid fa-map-location-dot"></i> Live Map & Smart Routes
+        </button>
+        <button class="nav-tab" data-tab="tab-predictor">
+          <i class="fa-solid fa-brain"></i> AI Congestion Predictor
+        </button>
+        <button class="nav-tab" data-tab="tab-reports">
+          <i class="fa-solid fa-bullhorn"></i> Community Reports <span class="badge-counter" id="incidents-count-badge">3</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-alerts">
+          <i class="fa-solid fa-triangle-exclamation"></i> Road Alerts & Emergency
+        </button>
+        <button class="nav-tab" data-tab="tab-analytics">
+          <i class="fa-solid fa-chart-line"></i> ML Model Analytics
+        </button>
+        <button class="nav-tab" data-tab="tab-admin">
+          <i class="fa-solid fa-shield-halved"></i> Admin Portal
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Live Announcements Ticker -->
+  <div class="alerts-ticker-bar">
+    <div class="ticker-label"><i class="fa-solid fa-bolt text-amber"></i> LIVE UPDATES</div>
+    <div class="ticker-scroller">
+      <div class="ticker-content" id="ticker-content">
+        <span>⚠️ Two-car fender bender near Exit 4 on Central Tech Corridor</span>
+        <span>🚧 Flyover joint repair underway on Express Ring Highway (1 lane open)</span>
+        <span>🚑 Active Ambulance AMB-108 running priority emergency route to Apollo Memorial</span>
+        <span>🌧️ Monsoon alert: Scattered evening showers expected across North sectors</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Application Content Area -->
+  <main class="app-main">
+    <!-- ========================================== -->
+    <!-- TAB 1: LIVE MAP & SMART ROUTE RECOMMENDER -->
+    <!-- ========================================== -->
+    <section id="tab-map" class="tab-pane active">
+      <div class="map-layout">
+        <!-- Route Planning Sidebar Panel -->
+        <aside class="route-panel">
+          <div class="panel-card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-compass text-blue"></i> Smart Route Recommendation</h3>
+              <p class="subtitle">AI evaluates alternative corridors based on real-time congestion, speed & hazards</p>
+            </div>
+
+            <form id="route-form" class="route-search-form">
+              <div class="form-group">
+                <label><i class="fa-solid fa-location-dot text-emerald"></i> Origin</label>
+                <select id="route-origin" class="form-select">
+                  <option value="tech_park" selected>Electronic City Tech Hub</option>
+                  <option value="indiranagar">Indiranagar Urban Hub</option>
+                  <option value="koramangala">Koramangala Commercial District</option>
+                  <option value="railway_station">Central Railway Station</option>
+                  <option value="north_ring">Hebbal Elevated Junction</option>
+                </select>
+              </div>
+
+              <div class="route-swap-row">
+                <button type="button" id="btn-swap-locations" class="btn-swap" title="Swap Origin and Destination">
+                  <i class="fa-solid fa-arrow-down-up-across-line"></i>
+                </button>
+              </div>
+
+              <div class="form-group">
+                <label><i class="fa-solid fa-flag-checkered text-rose"></i> Destination</label>
+                <select id="route-destination" class="form-select">
+                  <option value="city_center" selected>City Central Station & MG Road</option>
+                  <option value="airport">Kempegowda International Airport</option>
+                  <option value="whitefield">Whitefield IT Corridor</option>
+                  <option value="koramangala">Koramangala Commercial District</option>
+                  <option value="north_ring">Hebbal Elevated Junction</option>
+                </select>
+              </div>
+
+              <div class="route-params-grid">
+                <div class="form-group">
+                  <label><i class="fa-regular fa-clock"></i> Departure</label>
+                  <select id="route-time" class="form-select-sm">
+                    <option value="current">Current Time</option>
+                    <option value="8">Morning Rush (08:30)</option>
+                    <option value="14">Mid-day Offpeak (14:00)</option>
+                    <option value="18">Evening Peak (18:30)</option>
+                    <option value="22">Night Travel (22:00)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label><i class="fa-solid fa-cloud-showers-heavy"></i> Weather</label>
+                  <select id="route-weather" class="form-select-sm">
+                    <option value="Clear">Clear Skies</option>
+                    <option value="Cloudy">Cloudy</option>
+                    <option value="Rainy">Rainy</option>
+                    <option value="Heavy Rain">Heavy Rain</option>
+                    <option value="Foggy">Dense Fog</option>
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block" id="btn-find-routes">
+                <i class="fa-solid fa-magnifying-glass-location"></i> Find Recommended Routes
+              </button>
+            </form>
+          </div>
+
+          <!-- Route Comparison Results -->
+          <div class="routes-container" id="routes-results-list">
+            <div class="routes-loading hidden" id="routes-loader">
+              <div class="spinner"></div>
+              <p>Analyzing corridor telemetry & computing ML congestion scores...</p>
+            </div>
+            <!-- Dynamic route cards inserted here by map.js -->
+          </div>
+
+          <!-- Quick Actions & Simulation Controls -->
+          <div class="panel-card simulation-card">
+            <h4><i class="fa-solid fa-gamepad text-purple"></i> Interactive Demonstration Tools</h4>
+            <div class="sim-buttons-grid">
+              <button id="btn-simulate-emergency" class="btn btn-outline btn-sm">
+                <i class="fa-solid fa-truck-medical text-rose"></i> Simulate Ambulance
+              </button>
+              <button id="btn-quick-incident" class="btn btn-outline btn-sm" onclick="openReportModal()">
+                <i class="fa-solid fa-circle-exclamation text-amber"></i> Report Hazard
+              </button>
+              <button id="btn-toggle-traffic-layer" class="btn btn-outline btn-sm">
+                <i class="fa-solid fa-layer-group text-blue"></i> Traffic Heatmap
+              </button>
+              <button id="btn-reset-map" class="btn btn-outline btn-sm">
+                <i class="fa-solid fa-arrows-rotate"></i> Reset View
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Leaflet Map Container -->
+        <div class="map-view-wrapper">
+          <div id="traffic-map"></div>
+
+          <!-- Map Overlay Legend -->
+          <div class="map-legend">
+            <div class="legend-header"><i class="fa-solid fa-layer-group"></i> Traffic Legend</div>
+            <div class="legend-row">
+              <span class="legend-color-line bg-green"></span>
+              <span>Low Congestion (Speed &gt; 45 km/h)</span>
+            </div>
+            <div class="legend-row">
+              <span class="legend-color-line bg-amber"></span>
+              <span>Moderate Congestion (Speed 25-45 km/h)</span>
+            </div>
+            <div class="legend-row">
+              <span class="legend-color-line bg-red"></span>
+              <span>High Bottleneck (Speed &lt; 25 km/h)</span>
+            </div>
+            <div class="legend-divider"></div>
+            <div class="legend-row">
+              <span class="legend-icon text-rose"><i class="fa-solid fa-truck-medical"></i></span>
+              <span>Emergency Vehicle (Active Priority)</span>
+            </div>
+            <div class="legend-row">
+              <span class="legend-icon text-amber"><i class="fa-solid fa-triangle-exclamation"></i></span>
+              <span>Reported Incident / Hazard</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: AI CONGESTION PREDICTOR PLAYGROUND -->
+    <!-- ========================================== -->
+    <section id="tab-predictor" class="tab-pane">
+      <div class="predictor-grid">
+        <!-- Input Parameters Card -->
+        <div class="panel-card predictor-inputs-card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-microchip text-blue"></i> Random Forest Congestion Predictor</h3>
+            <p class="subtitle">Enter live traffic parameters or adjust the sliders to test the machine learning classifier</p>
+          </div>
+
+          <form id="predictor-form">
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label>Road Category</label>
+                <select id="p-road-type" class="form-select">
+                  <option value="Highway">Express Highway (Cap: 3000 vph)</option>
+                  <option value="Arterial" selected>Arterial Corridor (Cap: 1800 vph)</option>
+                  <option value="Urban">Urban City Street (Cap: 1200 vph)</option>
+                  <option value="Residential">Residential Link (Cap: 600 vph)</option>
+                </select>
+              </div>
+
+              <div class="form-group flex-1">
+                <label>Weather Condition</label>
+                <select id="p-weather" class="form-select">
+                  <option value="Clear">Clear Skies</option>
+                  <option value="Cloudy">Cloudy / Overcast</option>
+                  <option value="Rainy" selected>Rainy / Wet Pavement</option>
+                  <option value="Heavy Rain">Heavy Monsoon Downpour</option>
+                  <option value="Foggy">Dense Morning Fog</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Volume Slider -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <label><i class="fa-solid fa-car-side"></i> Traffic Volume (Vehicles / Hour)</label>
+                <span class="slider-value" id="val-traffic-volume">1,650</span>
+              </div>
+              <input type="range" id="p-traffic-volume" min="100" max="3600" step="50" value="1650" class="slider-input">
+              <div class="slider-markers">
+                <span>Light (200)</span>
+                <span>Normal (1500)</span>
+                <span>Near Capacity (2800+)</span>
+              </div>
+            </div>
+
+            <!-- Speed Slider -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <label><i class="fa-solid fa-gauge-high"></i> Average Vehicle Speed (km/h)</label>
+                <span class="slider-value" id="val-avg-speed">24 km/h</span>
+              </div>
+              <input type="range" id="p-avg-speed" min="5" max="100" step="1" value="24" class="slider-input">
+              <div class="slider-markers">
+                <span>Gridlock (5-15)</span>
+                <span>Crawling (20-35)</span>
+                <span>Free Flow (60+)</span>
+              </div>
+            </div>
+
+            <!-- Time Slider -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <label><i class="fa-regular fa-clock"></i> Time of Day (24-Hour Clock)</label>
+                <span class="slider-value" id="val-time-of-day">18:00 (Evening Peak)</span>
+              </div>
+              <input type="range" id="p-time-of-day" min="0" max="23" step="1" value="18" class="slider-input">
+              <div class="slider-markers">
+                <span>00:00 (Night)</span>
+                <span>09:00 (AM Peak)</span>
+                <span>14:00 (Offpeak)</span>
+                <span>18:00 (PM Peak)</span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label>Day of Week</label>
+                <select id="p-day-of-week" class="form-select">
+                  <option value="0">Monday</option>
+                  <option value="1">Tuesday</option>
+                  <option value="2">Wednesday</option>
+                  <option value="3" selected>Thursday</option>
+                  <option value="4">Friday</option>
+                  <option value="5">Saturday (Weekend)</option>
+                  <option value="6">Sunday (Weekend)</option>
+                </select>
+              </div>
+
+              <div class="form-group flex-1">
+                <label>Reported Incident on Road</label>
+                <select id="p-incident" class="form-select">
+                  <option value="0">None (Clear Roadway)</option>
+                  <option value="1" selected>Minor Accident / Breakdown</option>
+                  <option value="2">Major Multi-Vehicle Collision</option>
+                  <option value="3">Active Roadwork / Lane Closure</option>
+                  <option value="4">Hazard / Waterlogged Section</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group checkbox-group">
+              <label class="custom-checkbox">
+                <input type="checkbox" id="p-emergency-active">
+                <span class="checkmark"></span>
+                Emergency Vehicle Active in Segment (Ambulance / Fire)
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" id="btn-predict-now" class="btn btn-primary btn-block">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Classify Traffic Condition
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- ML Prediction Output Card -->
+        <div class="panel-card predictor-output-card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-chart-pie text-emerald"></i> Prediction Analysis & Probability Distribution</h3>
+            <p class="subtitle">Scikit-Learn Random Forest Classification Output</p>
+          </div>
+
+          <div class="prediction-hero-badge" id="prediction-hero-box">
+            <div class="hero-status-pill" id="pred-pill-label">MODERATE CONGESTION</div>
+            <div class="hero-confidence">Confidence Score: <span id="pred-confidence-text">92.4%</span></div>
+          </div>
+
+          <div class="probability-distribution-wrapper">
+            <h4>Predicted Class Probabilities</h4>
+            <!-- Probability Bar 1: Low -->
+            <div class="prob-row">
+              <div class="prob-labels">
+                <span><i class="fa-solid fa-circle text-emerald"></i> Low Congestion</span>
+                <span id="prob-low-val">8.2%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-bar bg-green" id="bar-low" style="width: 8.2%;"></div>
+              </div>
+            </div>
+
+            <!-- Probability Bar 2: Moderate -->
+            <div class="prob-row">
+              <div class="prob-labels">
+                <span><i class="fa-solid fa-circle text-amber"></i> Moderate Congestion</span>
+                <span id="prob-mod-val">76.5%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-bar bg-amber" id="bar-mod" style="width: 76.5%;"></div>
+              </div>
+            </div>
+
+            <!-- Probability Bar 3: High -->
+            <div class="prob-row">
+              <div class="prob-labels">
+                <span><i class="fa-solid fa-circle text-rose"></i> High Bottleneck</span>
+                <span id="prob-high-val">15.3%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-bar bg-red" id="bar-high" style="width: 15.3%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature Breakdown / Explainability -->
+          <div class="explainability-box">
+            <h4><i class="fa-solid fa-circle-info text-blue"></i> Model Explainability Factors</h4>
+            <div class="factors-grid">
+              <div class="factor-item">
+                <span class="factor-name">Volume / Capacity Ratio:</span>
+                <span class="factor-val" id="factor-vc">0.92 (High Demand)</span>
+              </div>
+              <div class="factor-item">
+                <span class="factor-name">Speed Degradation:</span>
+                <span class="factor-val" id="factor-speed">-60% below limit</span>
+              </div>
+              <div class="factor-item">
+                <span class="factor-name">Incident Weighting:</span>
+                <span class="factor-val" id="factor-incident">+7 penalty points</span>
+              </div>
+              <div class="factor-item">
+                <span class="factor-name">Weather Drag:</span>
+                <span class="factor-val" id="factor-weather">+6 penalty points</span>
+              </div>
+            </div>
+
+            <div class="advice-callout" id="prediction-advice">
+              <i class="fa-solid fa-lightbulb text-amber"></i>
+              <span id="advice-text">Expect occasional slowdowns and queueing along key arterial bottlenecks. Consider the Green Line Bypass route for faster transit.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: COMMUNITY INCIDENT REPORTS -->
+    <!-- ========================================== -->
+    <section id="tab-reports" class="tab-pane">
+      <div class="community-reports-layout">
+        <div class="reports-header-row">
+          <div>
+            <h2><i class="fa-solid fa-bullhorn text-amber"></i> Community Traffic & Road Reports</h2>
+            <p class="subtitle">Crowdsourced real-time reports verified by commuter upvotes and municipal patrol</p>
+          </div>
+          <button class="btn btn-primary" onclick="openReportModal()">
+            <i class="fa-solid fa-plus"></i> Submit Road Report
+          </button>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="reports-filters">
+          <button class="filter-chip active" data-filter="all">All Incidents</button>
+          <button class="filter-chip" data-filter="Accident"><i class="fa-solid fa-car-burst text-rose"></i> Accidents</button>
+          <button class="filter-chip" data-filter="Roadwork"><i class="fa-solid fa-person-digging text-amber"></i> Roadworks</button>
+          <button class="filter-chip" data-filter="Waterlogging"><i class="fa-solid fa-water text-blue"></i> Waterlogging</button>
+          <button class="filter-chip" data-filter="Hazard"><i class="fa-solid fa-triangle-exclamation text-yellow"></i> Hazards</button>
+        </div>
+
+        <!-- Incidents Grid -->
+        <div class="incidents-grid" id="incidents-container">
+          <!-- Dynamic incident cards loaded here by reports.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: ROAD ALERTS & EMERGENCY AWARENESS -->
+    <!-- ========================================== -->
+    <section id="tab-alerts" class="tab-pane">
+      <div class="alerts-layout">
+        <div class="alerts-header-row">
+          <div>
+            <h2><i class="fa-solid fa-truck-medical text-rose"></i> Emergency-Vehicle Awareness & Road Alerts</h2>
+            <p class="subtitle">Real-time priority sirens, lane clearing notifications, and administrative road safety bulletins</p>
+          </div>
+          <div class="alerts-controls">
+            <button id="btn-test-siren" class="btn btn-outline">
+              <i class="fa-solid fa-bell"></i> Test Siren Chime
+            </button>
+            <button id="btn-trigger-ambulance" class="btn btn-primary">
+              <i class="fa-solid fa-truck-medical"></i> Dispatch Test Ambulance
+            </button>
+          </div>
+        </div>
+
+        <!-- Emergency Vehicles Live Cards -->
+        <div class="section-title-sm"><i class="fa-solid fa-satellite-dish text-blue"></i> Active Emergency Vehicles in Transit</div>
+        <div class="emergency-vehicles-grid" id="emergency-vehicles-container">
+          <!-- Dynamic emergency cards from alerts.js -->
+        </div>
+
+        <!-- Official Safety Alerts Feed -->
+        <div class="section-title-sm mt-4"><i class="fa-solid fa-shield-halved text-emerald"></i> Active Road & Safety Bulletins</div>
+        <div class="bulletins-grid" id="alerts-bulletins-container">
+          <!-- Dynamic alert bulletins from alerts.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 5: ML MODEL ANALYTICS & EVALUATION -->
+    <!-- ========================================== -->
+    <section id="tab-analytics" class="tab-pane">
+      <div class="analytics-layout">
+        <div class="analytics-header">
+          <h2><i class="fa-solid fa-chart-line text-blue"></i> Machine Learning Model Architecture & Evaluation</h2>
+          <p class="subtitle">Academic evaluation benchmarks, confusion matrix, classification report, and feature weights</p>
+        </div>
+
+        <!-- KPI Cards Row -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-title">Classifier Algorithm</div>
+            <div class="kpi-value">Random Forest</div>
+            <div class="kpi-sub">100 Estimators • Max Depth 12</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Overall Accuracy</div>
+            <div class="kpi-value text-emerald" id="kpi-accuracy">96.3%</div>
+            <div class="kpi-sub">Stratified 80/20 Test Split</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Macro F1-Score</div>
+            <div class="kpi-value text-blue" id="kpi-f1">0.96</div>
+            <div class="kpi-sub">Harmonic Mean of Precision & Recall</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Historical Training Set</div>
+            <div class="kpi-value" id="kpi-samples">6,000</div>
+            <div class="kpi-sub">Synthetic Urban Mobility Samples</div>
+          </div>
+        </div>
+
+        <!-- Model Comparison & Feature Importances Row -->
+        <div class="analytics-charts-grid">
+          <div class="panel-card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-scale-balanced text-purple"></i> Model Performance Benchmark</h3>
+              <p class="subtitle">Random Forest vs Baseline Decision Tree vs Logistic Regression</p>
+            </div>
+            <div class="chart-box">
+              <img src="assets/ml/model_comparison.png" alt="Model Comparison Chart" class="analytics-img" onerror="this.style.display='none'; document.getElementById('benchmark-fallback').classList.remove('hidden');">
+              <div id="benchmark-fallback" class="fallback-table hidden">
+                <table class="data-table">
+                  <thead><tr><th>Model</th><th>Accuracy</th><th>Type</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>Random Forest</strong></td><td class="text-emerald"><strong>96.3%</strong></td><td>Ensemble</td></tr>
+                    <tr><td>Decision Tree</td><td>94.5%</td><td>Single Tree</td></tr>
+                    <tr><td>Logistic Regression</td><td>98.5%</td><td>Linear Baseline</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-ranking-star text-amber"></i> Top Feature Importances</h3>
+              <p class="subtitle">Relative contribution of features to traffic classification</p>
+            </div>
+            <div class="chart-box">
+              <img src="assets/ml/feature_importance.png" alt="Feature Importance Chart" class="analytics-img" onerror="this.style.display='none'; document.getElementById('features-fallback').classList.remove('hidden');">
+              <div id="features-fallback" class="fallback-table hidden">
+                <ul class="feature-list" id="features-list-dynamic"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Confusion Matrix & Metrics Row -->
+        <div class="analytics-charts-grid">
+          <div class="panel-card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-table-cells text-blue"></i> Confusion Matrix (1,200 Test Samples)</h3>
+              <p class="subtitle">Actual vs Predicted Congestion Classes</p>
+            </div>
+            <div class="chart-box">
+              <img src="assets/ml/confusion_matrix.png" alt="Confusion Matrix" class="analytics-img" onerror="this.style.display='none';">
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-file-lines text-emerald"></i> Detailed Classification Report</h3>
+              <p class="subtitle">Precision, Recall & F1-score breakdown per congestion category</p>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Congestion Class</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1-Score</th>
+                    <th>Support</th>
+                  </tr>
+                </thead>
+                <tbody id="metrics-table-body">
+                  <tr><td><strong>Low</strong></td><td>0.98</td><td>0.98</td><td>0.98</td><td>614</td></tr>
+                  <tr><td><strong>Moderate</strong></td><td>0.93</td><td>0.96</td><td>0.94</td><td>392</td></tr>
+                  <tr><td><strong>High</strong></td><td>0.98</td><td>0.91</td><td>0.94</td><td>194</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="model-meta-info mt-3">
+              <p><strong>Methodology Note:</strong> TraffIQ utilizes the Greenshields & BPR volume-delay mathematical model to correlate flow densities with speed decay curves, combined with ensemble bagging to handle non-linear rainfall and accident perturbations.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 6: ADMIN PORTAL -->
+    <!-- ========================================== -->
+    <section id="tab-admin" class="tab-pane">
+      <div class="admin-layout">
+        <!-- Admin Login Card (Shown if unauthenticated) -->
+        <div id="admin-login-view" class="panel-card admin-login-card">
+          <div class="card-header text-center">
+            <div class="admin-icon-circle"><i class="fa-solid fa-shield-halved"></i></div>
+            <h3>Traffic Management Admin Portal</h3>
+            <p class="subtitle">Login to moderate incident reports and broadcast citywide alerts</p>
+          </div>
+
+          <form id="admin-login-form">
+            <div class="form-group">
+              <label>Admin Username</label>
+              <input type="text" id="admin-user" class="form-input" value="admin" required>
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" id="admin-pass" class="form-input" value="traffiq2026" required>
+              <small class="text-muted">Default Academic Credential: <code>admin</code> / <code>traffiq2026</code></small>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">
+              <i class="fa-solid fa-lock-open"></i> Login to Dashboard
+            </button>
+          </form>
+        </div>
+
+        <!-- Admin Dashboard (Shown when logged in) -->
+        <div id="admin-dashboard-view" class="admin-dashboard-content hidden">
+          <div class="admin-header-row">
+            <div>
+              <h2><i class="fa-solid fa-shield-check text-emerald"></i> Traffic Control Center</h2>
+              <p class="subtitle">Welcome back, <span id="admin-user-display">Administrator</span></p>
+            </div>
+            <div class="admin-actions-bar">
+              <button class="btn btn-primary" onclick="openAlertModal()">
+                <i class="fa-solid fa-bullhorn"></i> Broadcast Emergency Alert
+              </button>
+              <button class="btn btn-outline" id="btn-admin-logout">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+              </button>
+            </div>
+          </div>
+
+          <!-- Incidents Moderation Table -->
+          <div class="panel-card mt-3">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-list-check text-blue"></i> Community Incident Moderation</h3>
+              <p class="subtitle">Review user-submitted reports, verify authenticity, or resolve completed incidents</p>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Title & Road</th>
+                    <th>Type</th>
+                    <th>Severity</th>
+                    <th>Reporter</th>
+                    <th>Status</th>
+                    <th>Upvotes</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-incidents-table-body">
+                  <!-- Populated by admin.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODAL: SUBMIT INCIDENT REPORT -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop hidden" id="modal-report">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-bullhorn text-amber"></i> Submit Community Road Report</h3>
+        <button class="modal-close" onclick="closeReportModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="form-submit-incident">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Report Title</label>
+            <input type="text" id="inc-title" class="form-input" placeholder="e.g. Fallen tree branch blocking left lane" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Incident Category</label>
+              <select id="inc-type" class="form-select" required>
+                <option value="Accident">Accident / Collision</option>
+                <option value="Roadwork">Roadwork / Construction</option>
+                <option value="Heavy Congestion">Heavy Congestion</option>
+                <option value="Waterlogging">Waterlogging</option>
+                <option value="Hazard">Hazard / Debris</option>
+                <option value="Vehicle Breakdown">Vehicle Breakdown</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label>Severity Level</label>
+              <select id="inc-severity" class="form-select">
+                <option value="Low">Low - Slow Traffic</option>
+                <option value="Medium" selected>Medium - Lane Obstructed</option>
+                <option value="High">High - Major Bottleneck</option>
+                <option value="Critical">Critical - Full Road Blockage</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Road / Corridor Location</label>
+            <input type="text" id="inc-road" class="form-input" placeholder="e.g. Express Ring Highway near Sector 4" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Latitude</label>
+              <input type="number" step="0.0001" id="inc-lat" class="form-input" value="12.9750">
+            </div>
+            <div class="form-group flex-1">
+              <label>Longitude</label>
+              <input type="number" step="0.0001" id="inc-lng" class="form-input" value="77.6100">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Description Details</label>
+            <textarea id="inc-desc" class="form-textarea" rows="3" placeholder="Provide extra helpful details for other commuters..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Your Name / Handle</label>
+            <input type="text" id="inc-reporter" class="form-input" placeholder="e.g. Alex (Commuter)">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeReportModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Publish Report</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: BROADCAST EMERGENCY ALERT (ADMIN) -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop hidden" id="modal-alert">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-bullhorn text-rose"></i> Broadcast Citywide Safety Alert</h3>
+        <button class="modal-close" onclick="closeAlertModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="form-broadcast-alert">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Alert Title</label>
+            <input type="text" id="alert-title" class="form-input" placeholder="e.g. Flash Flood Alert: Avoid Outer Ring Underpass" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Alert Category</label>
+              <select id="alert-type" class="form-select">
+                <option value="Emergency">Emergency Corridor</option>
+                <option value="Weather">Weather Advisory</option>
+                <option value="Road Closure">Road Closure Notice</option>
+                <option value="Congestion Warning">Congestion Warning</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label>Priority</label>
+              <select id="alert-priority" class="form-select">
+                <option value="Normal">Normal Announcement</option>
+                <option value="High">High Urgency</option>
+                <option value="Urgent" selected>Urgent (Triggers Audio & Banner)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Message Broadcast</label>
+            <textarea id="alert-message" class="form-textarea" rows="4" placeholder="Detailed instruction to drivers..." required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeAlertModal()">Cancel</button>
+          <button type="submit" class="btn btn-danger"><i class="fa-solid fa-tower-broadcast"></i> Broadcast Immediately</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Leaflet Map JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Application Modules -->
+  <script src="js/alerts.js"></script>
+  <script src="js/predictor.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/reports.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

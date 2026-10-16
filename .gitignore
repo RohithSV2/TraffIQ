@@ -1,0 +1,11 @@
+node_modules/
+.env
+.DS_Store
+__pycache__/
+*.pyc
+.vercel/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+data/traffiq_store.json
