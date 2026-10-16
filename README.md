@@ -1,6 +1,6 @@
 # TraffIQ: AI-Powered Traffic Prediction and Smart Route Recommendation System
 
-[![Vercel Deployment](https://img.shields.io/badge/Deployed-Vercel-black?style=for-the-badge&logo=vercel)](https://traffiq.vercel.app)
+[![Vercel Deployment](https://img.shields.io/badge/Deployed-Vercel-black?style=for-the-badge&logo=vercel)](https://traffiq-zeta.vercel.app)
 [![Node.js](https://img.shields.io/badge/Node.js-v20+-green?style=for-the-badge&logo=nodedotjs)](https://nodejs.org)
 [![Python](https://img.shields.io/badge/Python-3.12-blue?style=for-the-badge&logo=python)](https://python.org)
 [![Scikit-Learn](https://img.shields.io/badge/scikit--learn-Random%20Forest-orange?style=for-the-badge&logo=scikitlearn)](https://scikit-learn.org)
